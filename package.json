@@ -1,0 +1,32 @@
+{
+  "name": "sonny",
+  "version": "1.0.0",
+  "description": "Milestone Telegram Bot",
+  "main": "main.js",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "telegraf": "^3.22.2",
+    "telegraf-aws": "^0.1.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2017": "^6.24.1",
+    "rimraf": "^2.6.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist/ && babel ./src --out-dir dist/ --ignore ./package.json,./npm-debug.log --copy-files",
+    "start": "npm run build && node dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ventureum/Sonny.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ventureum/Sonny/issues"
+  },
+  "homepage": "https://github.com/ventureum/Sonny#readme"
+}
