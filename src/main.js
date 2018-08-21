@@ -22,6 +22,13 @@ const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton('👎', 'downvote')
 ])
 
+const PostType = {
+  POST: '0x2fca5a5e',
+  COMMENT: '0x6bf78b95',
+  AIRDROP: '0x04bc4e7a',
+  MILESTONE: '0xf7003d25'
+}
+
 function voteNumFormat (voteType, counter) {
   if (counter === 0) return ''
   return voteType + counter
@@ -80,6 +87,7 @@ bot.command('/refuel', async (ctx) => {
 })
 
 bot.action('upvote', async (ctx) => {
+  let upvoter = ctx.update.callback_query.from.username
   let upvoterId = ctx.update.callback_query.from.id
   let replyMessage = ctx.update.callback_query.message.reply_to_message
   let replyMessageId = replyMessage.message_id
@@ -98,12 +106,28 @@ bot.action('upvote', async (ctx) => {
     Markup.callbackButton('👎 ' + voteNumFormat('-', counter.downvote), 'downvote')
   ]))
 
-  await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
-  await ctx.telegram.sendMessage(upvoterId, 'You just upvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+  // invoke vote api
+  const result = await axios.post(
+    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+    {
+      actor: upvoter,
+      boardId: replyMessageChatTitle,
+      postHash: replyMessageId.toString(),
+      value: 1
+    }
+  )
 
+  if (result.data.ok) {
+    await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
+    await ctx.telegram.sendMessage(upvoterId, 'You just upvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+  } else {
+    // send error message
+    return ctx.telegram.sendMessage(upvoterId, result.data)
+  }
 })
 
 bot.action('downvote', async (ctx) => {
+  let upvoter = ctx.update.callback_query.from.username
   let upvoterId = ctx.update.callback_query.from.id
   let replyMessage = ctx.update.callback_query.message.reply_to_message
   let replyMessageId = replyMessage.message_id
@@ -122,31 +146,103 @@ bot.action('downvote', async (ctx) => {
     Markup.callbackButton('👎 ' + voteNumFormat('-', counter.downvote), 'downvote')
   ]))
 
-  await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
-  await ctx.telegram.sendMessage(upvoterId, 'You just downvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+  // invoke vote api
+  const result = await axios.post(
+    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+    {
+      actor: upvoter,
+      boardId: replyMessageChatTitle,
+      postHash: replyMessageId.toString(),
+      value: -1
+    }
+  )
+
+  console.log(result.data)
+
+  if (result.data.ok) {
+    await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
+    await ctx.telegram.sendMessage(upvoterId, 'You just downvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+  } else {
+    // send error message
+    return ctx.telegram.sendMessage(upvoterId, result.data)
+  }
 })
 
-bot.command('p', (ctx) => {
+bot.command('p', async (ctx) => {
   let user = ctx.message.from
   let messageId = ctx.message.message_id
   let chat = ctx.message.chat
-  voteCounter[messageId] = {upvote: 0, downvote: 0}
-  ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+  let messageText = ctx.message.text.slice(3)
 
-  // send a notification to user
-  ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
+  voteCounter[messageId] = {upvote: 0, downvote: 0}
+
+  let data = {
+    actor: user.username,
+    boardId: chat.title,
+    postHash: messageId.toString(),
+    parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
+    typeHash: PostType.POST,
+    content: {
+      title: '@' + user.username + ' From telegram',
+      subtitle: messageText.slice(0, 50) + '...',
+      text: messageText
+    },
+    getStreamApiKey: process.env.STREAM_API_KEY,
+    getStreamApiSecret: process.env.STREAM_API_SECRET
+  }
+
+  const result = await axios.post(
+    `${process.env.BOT_FEED_END_POINT}/feed-post`,
+    data
+  )
+
+  if (result.data.ok) {
+    // send a notification to user
+    await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+    return ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
+  } else {
+    // send error message
+    return ctx.telegram.sendMessage(user.id, result.data)
+  }
 })
 
-bot.command('r', (ctx) => {
+bot.command('r', async (ctx) => {
   let user = ctx.message.from
   let messageId = ctx.message.message_id
   let replyTo = ctx.message.reply_to_message
   let chat = ctx.message.chat
-  voteCounter[messageId] = {upvote: 0, downvote: 0}
-  ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+  let messageText = ctx.message.text.slice(3)
 
-  // send a notification to user
-  ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
+  voteCounter[messageId] = {upvote: 0, downvote: 0}
+
+  let data = {
+    actor: user.username,
+    boardId: chat.title,
+    postHash: messageId.toString(),
+    parentHash: replyTo.message_id.toString(),
+    typeHash: PostType.COMMENT,
+    content: {
+      title: '@' + user.username + ' From telegram',
+      subtitle: messageText.slice(0, 50) + '...',
+      text: messageText
+    },
+    getStreamApiKey: process.env.STREAM_API_KEY,
+    getStreamApiSecret: process.env.STREAM_API_SECRET
+  }
+
+  const result = await axios.post(
+    `${process.env.BOT_FEED_END_POINT}/feed-post`,
+    data
+  )
+
+  if (result.data.ok) {
+    // send a notification to user
+    await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+    return ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
+  } else {
+    // send error message
+    return ctx.telegram.sendMessage(user.id, result.data)
+  }
 })
 
 exports.handler = async (event, context, callback) => {
