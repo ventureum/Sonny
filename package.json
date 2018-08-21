@@ -4,6 +4,7 @@
   "description": "Milestone Telegram Bot",
   "main": "main.js",
   "dependencies": {
+    "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "telegraf": "^3.22.2"
   },
