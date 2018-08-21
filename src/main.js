@@ -29,6 +29,12 @@ const PostType = {
   MILESTONE: '0xf7003d25'
 }
 
+const validGroups = new Set(['botTest'])
+
+function isValidGroup(group) {
+  return validGroups.has(group)
+}
+
 function voteNumFormat (voteType, counter) {
   if (counter === 0) return ''
   return voteType + counter
@@ -174,6 +180,9 @@ bot.command('p', async (ctx) => {
   let chat = ctx.message.chat
   let messageText = ctx.message.text.slice(3)
 
+  // must be in a valid group
+  if (!isValidGroup(chat.title)) return
+
   voteCounter[messageId] = {upvote: 0, downvote: 0}
 
   let data = {
@@ -212,6 +221,9 @@ bot.command('r', async (ctx) => {
   let replyTo = ctx.message.reply_to_message
   let chat = ctx.message.chat
   let messageText = ctx.message.text.slice(3)
+
+  // must be in a valid group
+  if (!isValidGroup(chat.title)) return
 
   voteCounter[messageId] = {upvote: 0, downvote: 0}
 
