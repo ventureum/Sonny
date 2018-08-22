@@ -17,7 +17,8 @@ if (process.env.BOT_LOCAL === 'true') {
 
 const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton('👍', 'upvote'),
-  Markup.callbackButton('👎', 'downvote')
+  Markup.callbackButton('👎', 'downvote'),
+  Markup.callbackButton('Vote Cost', 'cost')
 ])
 
 const PostType = {
@@ -115,7 +116,8 @@ bot.action('upvote', async (ctx) => {
 
     ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
       Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
+      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+      Markup.callbackButton('Vote Cost', 'cost')
     ]))
 
     // send notification
@@ -155,7 +157,8 @@ bot.action('downvote', async (ctx) => {
 
     ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
       Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
+      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+      Markup.callbackButton('Vote Cost', 'cost')
     ]))
 
     // send notification
@@ -166,6 +169,38 @@ bot.action('downvote', async (ctx) => {
       // insufficient reputation error
       return ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
     }
+    return ctx.telegram.sendMessage(upvoterId, result.data)
+  }
+})
+
+// estimate vote cost
+bot.action('cost', async (ctx) => {
+  let callbackQuery = ctx.update.callback_query
+  let upvoter = ctx.update.callback_query.from.username
+  let upvoterId = ctx.update.callback_query.from.id
+  let replyMessage = ctx.update.callback_query.message.reply_to_message
+  let replyMessageId = replyMessage.message_id
+  let replyMessageChat = replyMessage.chat
+  let replyMessageChatTitle = replyMessageChat.title
+
+  // invoke vote api
+  const result = await axios.post(
+    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+    {
+      actor: upvoter,
+      boardId: replyMessageChatTitle,
+      postHash: replyMessageId.toString(),
+      value: 0
+    }
+  )
+
+  if (result.data.ok) {
+    let voteInfo = result.data.voteInfo
+
+    // send notification
+    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Estimated MS cost: ' + voteInfo.cost)
+  } else {
+    // send error message
     return ctx.telegram.sendMessage(upvoterId, result.data)
   }
 })
