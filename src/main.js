@@ -40,253 +40,285 @@ function voteNumFormat (voteType, counter) {
 }
 
 bot.command('/rep', async (ctx) => {
-  console.log(ctx.update)
-  let username = ctx.message.from.username
-  let userId = ctx.message.from.id
-  let chatId = ctx.message.chat.id
+  try {
+    let username = ctx.message.from.username
+    let userId = ctx.message.from.id
+    let chatId = ctx.message.chat.id
 
-  // Can only be called in a private chat
-  if (userId !== chatId) return
+    // Can only be called in a private chat
+    if (userId !== chatId) return
 
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/get-reputations`,
-    {
-      UserAddress: username
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/get-reputations`,
+      {
+        UserAddress: username
+      }
+    )
+
+    let _reply = null
+    if (result.data.ok) {
+      _reply = result.data.reputations
+    } else {
+      _reply = result.data.message
     }
-  )
 
-  let _reply = null
-  if (result.data.ok) {
-    _reply = result.data.reputations
-  } else {
-    _reply = result.data.message
+    await ctx.reply('Current reputation: ' + _reply)
+  } catch (error) {
+    console.log(error)
   }
-
-  return ctx.reply('Current reputation: ' + _reply)
 })
 
 // DEV TEST ONLY
 bot.command('/refuel', async (ctx) => {
-  console.log(ctx.update)
-  let username = ctx.message.from.username
-  let userId = ctx.message.from.id
-  let chatId = ctx.message.chat.id
-  let repAmount = ctx.message.text.split(' ')[1]
+  try {
+    let username = ctx.message.from.username
+    let userId = ctx.message.from.id
+    let chatId = ctx.message.chat.id
+    let repAmount = ctx.message.text.split(' ')[1]
 
-  // Can only be called in a private chat
-  if (userId !== chatId) return
+    // Can only be called in a private chat
+    if (userId !== chatId) return
 
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/refuel-reputations`,
-    {
-      UserAddress: username,
-      reputations: parseInt(repAmount)
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/refuel-reputations`,
+      {
+        UserAddress: username,
+        reputations: parseInt(repAmount)
+      }
+    )
+
+    if (result.data.ok) {
+      await ctx.reply('Refuel completed')
+    } else {
+      await ctx.reply(result.data)
     }
-  )
-
-  if (result.data.ok) {
-    return ctx.reply('Refuel completed')
-  } else {
-    return ctx.reply(result.data)
+  } catch (error) {
+    console.log(error)
   }
 })
 
 bot.action('upvote', async (ctx) => {
-  let callbackQuery = ctx.update.callback_query
-  let upvoter = ctx.update.callback_query.from.username
-  let upvoterId = ctx.update.callback_query.from.id
-  let replyMessage = ctx.update.callback_query.message.reply_to_message
-  let replyMessageId = replyMessage.message_id
-  let replyMessageChat = replyMessage.chat
-  let replyMessageChatTitle = replyMessageChat.title
+  try {
+    let callbackQuery = ctx.update.callback_query
+    let upvoter = ctx.update.callback_query.from.username
+    let upvoterId = ctx.update.callback_query.from.id
+    let replyMessage = ctx.update.callback_query.message.reply_to_message
+    let replyMessageId = replyMessage.message_id
+    let replyMessageChat = replyMessage.chat
+    let replyMessageChatTitle = replyMessageChat.title
 
-  // invoke vote api
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
-    {
-      actor: upvoter,
-      boardId: replyMessageChatTitle,
-      postHash: replyMessageId.toString(),
-      value: 1
+    // invoke vote api
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+      {
+        actor: upvoter,
+        boardId: replyMessageChatTitle,
+        postHash: replyMessageId.toString(),
+        value: 1
+      }
+    )
+
+    if (result.data.ok) {
+      let voteInfo = result.data.voteInfo
+
+      ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
+        Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('Vote Cost', 'cost')
+      ]))
+
+      // send notification
+      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ') ' + ', reputation cost: ' + voteInfo.cost)
+    } else {
+      // send error message
+      if (result.data.message.startsWith('Failed to substract reputaions')) {
+        // insufficient reputation error
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+      } else {
+        await ctx.telegram.sendMessage(upvoterId, result.data)
+      }
     }
-  )
-
-  if (result.data.ok) {
-    let voteInfo = result.data.voteInfo
-
-    ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-      Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
-      Markup.callbackButton('Vote Cost', 'cost')
-    ]))
-
-    // send notification
-    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ') ' + ', reputation cost: ' + voteInfo.cost)
-  } else {
-    // send error message
-    if (result.data.message.startsWith('Failed to substract reputaions')) {
-      // insufficient reputation error
-      return ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
-    }
-    return ctx.telegram.sendMessage(upvoterId, result.data)
+  } catch (error) {
+    console.log(error)
   }
 })
 
 bot.action('downvote', async (ctx) => {
-  let callbackQuery = ctx.update.callback_query
-  let upvoter = ctx.update.callback_query.from.username
-  let upvoterId = ctx.update.callback_query.from.id
-  let replyMessage = ctx.update.callback_query.message.reply_to_message
-  let replyMessageId = replyMessage.message_id
-  let replyMessageChat = replyMessage.chat
-  let replyMessageChatTitle = replyMessageChat.title
+  try {
+    let callbackQuery = ctx.update.callback_query
+    let upvoter = ctx.update.callback_query.from.username
+    let upvoterId = ctx.update.callback_query.from.id
+    let replyMessage = ctx.update.callback_query.message.reply_to_message
+    let replyMessageId = replyMessage.message_id
+    let replyMessageChat = replyMessage.chat
+    let replyMessageChatTitle = replyMessageChat.title
 
-  // invoke vote api
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
-    {
-      actor: upvoter,
-      boardId: replyMessageChatTitle,
-      postHash: replyMessageId.toString(),
-      value: -1
+    // invoke vote api
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+      {
+        actor: upvoter,
+        boardId: replyMessageChatTitle,
+        postHash: replyMessageId.toString(),
+        value: -1
+      }
+    )
+
+    if (result.data.ok) {
+      let voteInfo = result.data.voteInfo
+
+      ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
+        Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('Vote Cost', 'cost')
+      ]))
+
+      // send notification
+      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ') ' + ', MS cost: ' + voteInfo.cost)
+    } else {
+      // send error message
+      if (result.data.message.startsWith('Failed to substract reputaions')) {
+        // insufficient reputation error
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+      } else {
+        await ctx.telegram.sendMessage(upvoterId, result.data)
+      }
     }
-  )
-
-  if (result.data.ok) {
-    let voteInfo = result.data.voteInfo
-
-    ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-      Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
-      Markup.callbackButton('Vote Cost', 'cost')
-    ]))
-
-    // send notification
-    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ') ' + ', MS cost: ' + voteInfo.cost)
-  } else {
-    // send error message
-    if (result.data.message.startsWith('Failed to substract reputaions')) {
-      // insufficient reputation error
-      return ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
-    }
-    return ctx.telegram.sendMessage(upvoterId, result.data)
+  } catch (error) {
+    console.log(error)
   }
 })
 
 // estimate vote cost
 bot.action('cost', async (ctx) => {
-  let callbackQuery = ctx.update.callback_query
-  let upvoter = ctx.update.callback_query.from.username
-  let upvoterId = ctx.update.callback_query.from.id
-  let replyMessage = ctx.update.callback_query.message.reply_to_message
-  let replyMessageId = replyMessage.message_id
-  let replyMessageChat = replyMessage.chat
-  let replyMessageChatTitle = replyMessageChat.title
+  try {
+    let callbackQuery = ctx.update.callback_query
+    let upvoter = ctx.update.callback_query.from.username
+    let upvoterId = ctx.update.callback_query.from.id
+    let replyMessage = ctx.update.callback_query.message.reply_to_message
+    let replyMessageId = replyMessage.message_id
+    let replyMessageChat = replyMessage.chat
+    let replyMessageChatTitle = replyMessageChat.title
 
-  // invoke vote api
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
-    {
-      actor: upvoter,
-      boardId: replyMessageChatTitle,
-      postHash: replyMessageId.toString(),
-      value: 0
+    // invoke vote api
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+      {
+        actor: upvoter,
+        boardId: replyMessageChatTitle,
+        postHash: replyMessageId.toString(),
+        value: 0
+      }
+    )
+
+    if (result.data.ok) {
+      let voteInfo = result.data.voteInfo
+
+      // send notification
+      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Estimated MS cost: ' + voteInfo.cost)
+    } else {
+      // send error message
+      await ctx.telegram.sendMessage(upvoterId, result.data)
     }
-  )
-
-  if (result.data.ok) {
-    let voteInfo = result.data.voteInfo
-
-    // send notification
-    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Estimated MS cost: ' + voteInfo.cost)
-  } else {
-    // send error message
-    return ctx.telegram.sendMessage(upvoterId, result.data)
+  } catch (error) {
+    console.log(error)
   }
 })
 
 bot.command('p', async (ctx) => {
-  let user = ctx.message.from
-  let messageId = ctx.message.message_id
-  let chat = ctx.message.chat
-  let messageText = ctx.message.text.slice(3)
+  try {
+    let user = ctx.message.from
+    let messageId = ctx.message.message_id
+    let chat = ctx.message.chat
+    let messageText = ctx.message.text.slice(3)
 
-  // must be in a valid group
-  if (!isValidGroup(chat.title)) return
+    // must be in a valid group
+    if (!isValidGroup(chat.title)) return
 
-  let data = {
-    actor: user.username,
-    boardId: chat.title,
-    postHash: messageId.toString(),
-    parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
-    typeHash: PostType.POST,
-    content: {
-      title: '@' + user.username + ' From telegram',
-      subtitle: messageText.slice(0, 50) + '...',
-      text: messageText
-    },
-    getStreamApiKey: process.env.STREAM_API_KEY,
-    getStreamApiSecret: process.env.STREAM_API_SECRET
-  }
+    let data = {
+      actor: user.username,
+      boardId: chat.title,
+      postHash: messageId.toString(),
+      parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
+      typeHash: PostType.POST,
+      content: {
+        title: '@' + user.username + ' From telegram',
+        subtitle: messageText.slice(0, 50) + '...',
+        text: messageText
+      },
+      getStreamApiKey: process.env.STREAM_API_KEY,
+      getStreamApiSecret: process.env.STREAM_API_SECRET
+    }
 
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/feed-post`,
-    data
-  )
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/feed-post`,
+      data
+    )
 
-  if (result.data.ok) {
-    // send a notification to user
-    await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
-    return ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
-  } else {
-    // send error message
-    return ctx.telegram.sendMessage(user.id, result.data)
+    if (result.data.ok) {
+      // send a notification to user
+      await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+      // return ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
+    } else {
+      // send error message
+      await ctx.telegram.sendMessage(user.id, result.data)
+    }
+  } catch (error) {
+    console.log(error)
   }
 })
 
 bot.command('r', async (ctx) => {
-  let user = ctx.message.from
-  let messageId = ctx.message.message_id
-  let replyTo = ctx.message.reply_to_message
-  let chat = ctx.message.chat
-  let messageText = ctx.message.text.slice(3)
+  try {
+    let user = ctx.message.from
+    let messageId = ctx.message.message_id
+    let replyTo = ctx.message.reply_to_message
+    let chat = ctx.message.chat
+    let messageText = ctx.message.text.slice(3)
 
-  // must be in a valid group
-  if (!isValidGroup(chat.title)) return
+    // must be in a valid group
+    if (!isValidGroup(chat.title)) return
 
-  let data = {
-    actor: user.username,
-    boardId: chat.title,
-    postHash: messageId.toString(),
-    parentHash: replyTo.message_id.toString(),
-    typeHash: PostType.COMMENT,
-    content: {
-      title: '@' + user.username + ' From telegram',
-      subtitle: messageText.slice(0, 50) + '...',
-      text: messageText
-    },
-    getStreamApiKey: process.env.STREAM_API_KEY,
-    getStreamApiSecret: process.env.STREAM_API_SECRET
-  }
+    let data = {
+      actor: user.username,
+      boardId: chat.title,
+      postHash: messageId.toString(),
+      parentHash: replyTo.message_id.toString(),
+      typeHash: PostType.COMMENT,
+      content: {
+        title: '@' + user.username + ' From telegram',
+        subtitle: messageText.slice(0, 50) + '...',
+        text: messageText
+      },
+      getStreamApiKey: process.env.STREAM_API_KEY,
+      getStreamApiSecret: process.env.STREAM_API_SECRET
+    }
 
-  const result = await axios.post(
-    `${process.env.BOT_FEED_END_POINT}/feed-post`,
-    data
-  )
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/feed-post`,
+      data
+    )
 
-  if (result.data.ok) {
-    // send a notification to user
-    await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
-    return ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
-  } else {
-    // send error message
-    return ctx.telegram.sendMessage(user.id, result.data)
+    if (result.data.ok) {
+      // send a notification to user
+      await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+      // return ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
+    } else {
+      // send error message
+      await ctx.telegram.sendMessage(user.id, result.data)
+    }
+  } catch (error) {
+    console.log(error)
   }
 })
 
 exports.handler = async (event, context, callback) => {
   const body = event.body // get data passed to us
-  bot.handleUpdate(body) // make Telegraf process that data
+  try {
+    bot.handleUpdate(body) // make Telegraf process that data
+  } catch (error) {
+    console.log(error)
+  }
   return callback(null, { // return something for webhook, so it doesn't try to send same stuff again
     statusCode: 200,
     body: ''
