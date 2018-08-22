@@ -15,8 +15,6 @@ if (process.env.BOT_LOCAL === 'true') {
   bot.telegram.setWebhook(process.env.BOT_WEBHOOK_URL)
 }
 
-var voteCounter = {}
-
 const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton('👍', 'upvote'),
   Markup.callbackButton('👎', 'downvote')
@@ -31,7 +29,7 @@ const PostType = {
 
 const validGroups = new Set(['botTest'])
 
-function isValidGroup(group) {
+function isValidGroup (group) {
   return validGroups.has(group)
 }
 
@@ -103,15 +101,6 @@ bot.action('upvote', async (ctx) => {
   let replyMessageChatTitle = replyMessageChat.title
   let replyMessageChatId = replyMessageChat.id
 
-  voteCounter[replyMessageId].upvote++
-
-  let counter = voteCounter[replyMessageId]
-
-  ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-    Markup.callbackButton('👍 ' + voteNumFormat('+', counter.upvote), 'upvote'),
-    Markup.callbackButton('👎 ' + voteNumFormat('-', counter.downvote), 'downvote')
-  ]))
-
   // invoke vote api
   const result = await axios.post(
     `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
@@ -124,6 +113,13 @@ bot.action('upvote', async (ctx) => {
   )
 
   if (result.data.ok) {
+    let voteInfo = result.data.voteInfo
+
+    ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
+      Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
+      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
+    ]))
+
     await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
     await ctx.telegram.sendMessage(upvoterId, 'You just upvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
   } else {
@@ -143,15 +139,6 @@ bot.action('downvote', async (ctx) => {
   let replyMessageChatTitle = replyMessageChat.title
   let replyMessageChatId = replyMessageChat.id
 
-  voteCounter[replyMessageId].downvote++
-
-  let counter = voteCounter[replyMessageId]
-
-  ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-    Markup.callbackButton('👍 ' + voteNumFormat('+', counter.upvote), 'upvote'),
-    Markup.callbackButton('👎 ' + voteNumFormat('-', counter.downvote), 'downvote')
-  ]))
-
   // invoke vote api
   const result = await axios.post(
     `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
@@ -163,9 +150,14 @@ bot.action('downvote', async (ctx) => {
     }
   )
 
-  console.log(result.data)
-
   if (result.data.ok) {
+    let voteInfo = result.data.voteInfo
+
+    ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
+      Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
+      Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
+    ]))
+
     await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
     await ctx.telegram.sendMessage(upvoterId, 'You just downvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
   } else {
@@ -182,8 +174,6 @@ bot.command('p', async (ctx) => {
 
   // must be in a valid group
   if (!isValidGroup(chat.title)) return
-
-  voteCounter[messageId] = {upvote: 0, downvote: 0}
 
   let data = {
     actor: user.username,
@@ -224,8 +214,6 @@ bot.command('r', async (ctx) => {
 
   // must be in a valid group
   if (!isValidGroup(chat.title)) return
-
-  voteCounter[messageId] = {upvote: 0, downvote: 0}
 
   let data = {
     actor: user.username,
