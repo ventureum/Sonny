@@ -91,15 +91,13 @@ bot.command('/refuel', async (ctx) => {
 })
 
 bot.action('upvote', async (ctx) => {
+  let callbackQuery = ctx.update.callback_query
   let upvoter = ctx.update.callback_query.from.username
   let upvoterId = ctx.update.callback_query.from.id
   let replyMessage = ctx.update.callback_query.message.reply_to_message
   let replyMessageId = replyMessage.message_id
-  let replyMessageUser = replyMessage.from
-  let replyMessageUsername = replyMessageUser.username
   let replyMessageChat = replyMessage.chat
   let replyMessageChatTitle = replyMessageChat.title
-  let replyMessageChatId = replyMessageChat.id
 
   // invoke vote api
   const result = await axios.post(
@@ -120,24 +118,26 @@ bot.action('upvote', async (ctx) => {
       Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
     ]))
 
-    await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
-    await ctx.telegram.sendMessage(upvoterId, 'You just upvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+    // send notification
+    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ') ' + ', reputation cost: ' + voteInfo.cost)
   } else {
     // send error message
+    if (result.data.message.startsWith('Failed to substract reputaions')) {
+      // insufficient reputation error
+      return ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+    }
     return ctx.telegram.sendMessage(upvoterId, result.data)
   }
 })
 
 bot.action('downvote', async (ctx) => {
+  let callbackQuery = ctx.update.callback_query
   let upvoter = ctx.update.callback_query.from.username
   let upvoterId = ctx.update.callback_query.from.id
   let replyMessage = ctx.update.callback_query.message.reply_to_message
   let replyMessageId = replyMessage.message_id
-  let replyMessageUser = replyMessage.from
-  let replyMessageUsername = replyMessageUser.username
   let replyMessageChat = replyMessage.chat
   let replyMessageChatTitle = replyMessageChat.title
-  let replyMessageChatId = replyMessageChat.id
 
   // invoke vote api
   const result = await axios.post(
@@ -158,10 +158,14 @@ bot.action('downvote', async (ctx) => {
       Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote')
     ]))
 
-    await ctx.telegram.forwardMessage(upvoterId, replyMessageChatId, replyMessageId, {disable_notification: true})
-    await ctx.telegram.sendMessage(upvoterId, 'You just downvoted the above message (#' + replyMessageId + ') posted by @' + replyMessageUsername + ' from group ' + replyMessageChatTitle, {disable_notification: true})
+    // send notification
+    await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ') ' + ', MS cost: ' + voteInfo.cost)
   } else {
     // send error message
+    if (result.data.message.startsWith('Failed to substract reputaions')) {
+      // insufficient reputation error
+      return ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+    }
     return ctx.telegram.sendMessage(upvoterId, result.data)
   }
 })
