@@ -28,7 +28,7 @@ const PostType = {
   MILESTONE: '0xf7003d25'
 }
 
-const validGroups = new Set(['botTest'])
+const validGroups = new Set(['botTest', 'botTest2'])
 
 function isValidGroup (group) {
   return validGroups.has(group)
@@ -39,7 +39,7 @@ function voteNumFormat (voteType, counter) {
   return voteType + counter
 }
 
-bot.command('/rep', async (ctx) => {
+bot.command('rep', async (ctx) => {
   try {
     let username = ctx.message.from.username
     let userId = ctx.message.from.id
@@ -55,6 +55,7 @@ bot.command('/rep', async (ctx) => {
       }
     )
 
+    console.log(result.data)
     let _reply = null
     if (result.data.ok) {
       _reply = result.data.reputations
@@ -69,7 +70,7 @@ bot.command('/rep', async (ctx) => {
 })
 
 // DEV TEST ONLY
-bot.command('/refuel', async (ctx) => {
+bot.command('refuel', async (ctx) => {
   try {
     let username = ctx.message.from.username
     let userId = ctx.message.from.id
@@ -131,11 +132,12 @@ bot.action('upvote', async (ctx) => {
       await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ') ' + ', reputation cost: ' + voteInfo.cost)
     } else {
       // send error message
-      if (result.data.message.startsWith('Failed to substract reputaions')) {
+      let errorMsg = JSON.parse(result.data.message)
+      if (errorMsg.errorCode === 'InsuffientReputaionsAmount') {
         // insufficient reputation error
-        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS, require ' + errorMsg.errorData.diff + ' more')
       } else {
-        await ctx.telegram.sendMessage(upvoterId, result.data)
+        await ctx.telegram.sendMessage(upvoterId, errorMsg)
       }
     }
   } catch (error) {
@@ -177,11 +179,12 @@ bot.action('downvote', async (ctx) => {
       await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ') ' + ', MS cost: ' + voteInfo.cost)
     } else {
       // send error message
-      if (result.data.message.startsWith('Failed to substract reputaions')) {
+      let errorMsg = JSON.parse(result.data.message)
+      if (errorMsg.errorCode === 'InsuffientReputaionsAmount') {
         // insufficient reputation error
-        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS')
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS, require ' + errorMsg.errorData.diff + ' more')
       } else {
-        await ctx.telegram.sendMessage(upvoterId, result.data)
+        await ctx.telegram.sendMessage(upvoterId, errorMsg)
       }
     }
   } catch (error) {
@@ -261,7 +264,7 @@ bot.command('p', async (ctx) => {
       // return ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
     } else {
       // send error message
-      await ctx.telegram.sendMessage(user.id, result.data)
+      await ctx.telegram.sendMessage(user.id, result.data.message)
     }
   } catch (error) {
     console.log(error)
@@ -305,7 +308,7 @@ bot.command('r', async (ctx) => {
       // return ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
     } else {
       // send error message
-      await ctx.telegram.sendMessage(user.id, result.data)
+      await ctx.telegram.sendMessage(user.id, result.data.message)
     }
   } catch (error) {
     console.log(error)
