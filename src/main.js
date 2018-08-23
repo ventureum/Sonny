@@ -39,6 +39,14 @@ function voteNumFormat (voteType, counter) {
   return voteType + counter
 }
 
+const helpMsg = 'Milestone Bot\n\n' +
+      'Milestone bot provides a simple way to interact with milestone community \n\n' +
+      '/rep — view current reputation\n'
+
+bot.start((ctx) => ctx.reply(`Hello, ${ctx.from.first_name} \n\n` + helpMsg))
+
+bot.help((ctx) => ctx.reply(helpMsg))
+
 bot.command('rep', async (ctx) => {
   try {
     let username = ctx.message.from.username
