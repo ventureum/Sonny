@@ -28,7 +28,7 @@ const PostType = {
   MILESTONE: '0xf7003d25'
 }
 
-const validGroups = new Set(['botTest', 'botTest2'])
+const validGroups = new Set(['botTest2', 'MilestoneChatbot Test'])
 
 function isValidGroup (group) {
   return validGroups.has(group)
@@ -269,7 +269,6 @@ bot.command('p', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
-      // return ctx.telegram.sendMessage(user.id, 'You just posted a message (#' + messageId + ') in group ' + chat.title, {disable_notification: true})
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -279,13 +278,22 @@ bot.command('p', async (ctx) => {
   }
 })
 
-bot.command('r', async (ctx) => {
+// process replies
+bot.on('message', async (ctx) => {
   try {
     let user = ctx.message.from
     let messageId = ctx.message.message_id
-    let replyTo = ctx.message.reply_to_message
     let chat = ctx.message.chat
-    let messageText = ctx.message.text.slice(3)
+    let messageText = ctx.message.text
+
+    // must be a reply
+    if (!ctx.message.reply_to_message) return
+
+    let replyTo = ctx.message.reply_to_message
+    let replyToMessage = replyTo.text
+
+    // must be a reply to a post
+    if (!replyToMessage.startsWith('/p ')) return
 
     // must be in a valid group
     if (!isValidGroup(chat.title)) return
@@ -313,7 +321,6 @@ bot.command('r', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
-      // return ctx.telegram.sendMessage(user.id, 'You just replied to message (#' + replyTo.message_id + ') in group ' + chat.title, {disable_notification: true})
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
