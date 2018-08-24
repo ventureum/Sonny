@@ -39,11 +39,52 @@ function voteNumFormat (voteType, counter) {
   return voteType + counter
 }
 
-const helpMsg = 'Milestone Bot\n\n' +
-      'Milestone bot provides a simple way to interact with milestone community \n\n' +
+const helpMsg = 'Milestone bot provides a simple way to interact with milestone community \n\n' +
       '/rep — view current reputation\n'
 
-bot.start((ctx) => ctx.reply(`Hello, ${ctx.from.first_name} \n\n` + helpMsg))
+bot.start(async (ctx) => {
+  try {
+    await ctx.reply(`Hello, ${ctx.from.first_name} \n\n`)
+
+    let username = ctx.message.from.username
+    // first check if user has registered
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/get-profile`,
+      {
+        actor: username
+      }
+    )
+
+    if (!result.data.ok) {
+      // error
+      // check if we have received actor prifile not exist error
+      let msg = result.data.message
+      if (msg.errorCode === 'Gerenal' &&
+          msg.errorMessage.startsWith('No actor profile exists')) {
+        // no actor exists
+        // automatically register for the user
+        let regResult = await axios.post(
+          `${process.env.BOT_FEED_END_POINT}/profile`,
+          {
+            actor: username,
+            userType: 'USER'
+          }
+        )
+
+        if (regResult.data.ok) {
+          await ctx.reply('I have created an account for you in our system!')
+        } else {
+          await ctx.reply(regResult.data.message)
+        }
+      }
+    } else {
+      await ctx.reply('You have already registered with us.')
+    }
+    return ctx.reply(helpMsg)
+  } catch (error) {
+    console.log(error)
+  }
+})
 
 bot.help((ctx) => ctx.reply(helpMsg))
 
