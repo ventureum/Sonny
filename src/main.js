@@ -59,8 +59,7 @@ bot.start(async (ctx) => {
       // error
       // check if we have received actor prifile not exist error
       let msg = result.data.message
-      if (msg.errorCode === 'Gerenal' &&
-          msg.errorMessage.startsWith('No actor profile exists')) {
+      if (msg.errorCode === 'NoActorExisting') {
         // no actor exists
         // automatically register for the user
         let regResult = await axios.post(
@@ -104,7 +103,6 @@ bot.command('rep', async (ctx) => {
       }
     )
 
-    console.log(result.data)
     let _reply = null
     if (result.data.ok) {
       _reply = result.data.reputations
@@ -270,7 +268,7 @@ bot.action('cost', async (ctx) => {
       await ctx.telegram.answerCbQuery(callbackQuery.id, 'Estimated MS cost: ' + voteInfo.cost)
     } else {
       // send error message
-      await ctx.telegram.sendMessage(upvoterId, result.data)
+      await ctx.telegram.answerCbQuery(callbackQuery.id, result.data.message.errorCode)
     }
   } catch (error) {
     console.log(error)
