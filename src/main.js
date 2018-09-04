@@ -168,21 +168,25 @@ bot.action('upvote', async (ctx) => {
 
     if (result.data.ok) {
       let voteInfo = result.data.voteInfo
+      let postVoteCountInfo = voteInfo.postVoteCountInfo
 
       ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-        Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-        Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('👍 ' + voteNumFormat('+', postVoteCountInfo.upvoteCount), 'upvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote'),
         Markup.callbackButton('Vote Cost', 'cost')
       ]))
 
       // send notification
-      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ') ' + ', reputation cost: ' + voteInfo.cost)
+      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Upvoted msg (#' + replyMessageId + ')')
     } else {
       // send error message
-      let errorMsg = JSON.parse(result.data.message)
+      let errorMsg = result.data.message
       if (errorMsg.errorCode === 'InsuffientReputaionsAmount') {
         // insufficient reputation error
         await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS, require ' + errorMsg.errorData.diff + ' more')
+      } else if (errorMsg.errorCode === 'ExceedingUpvoteLimit') {
+        // can only vote once
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'You have already upvoted')
       } else {
         await ctx.telegram.sendMessage(upvoterId, errorMsg)
       }
@@ -215,21 +219,25 @@ bot.action('downvote', async (ctx) => {
 
     if (result.data.ok) {
       let voteInfo = result.data.voteInfo
+      let postVoteCountInfo = voteInfo.postVoteCountInfo
 
       ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
-        Markup.callbackButton('👍 ' + voteNumFormat('+', voteInfo.upvoteCount), 'upvote'),
-        Markup.callbackButton('👎 ' + voteNumFormat('-', voteInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('👍 ' + voteNumFormat('+', postVoteCountInfo.upvoteCount), 'upvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote'),
         Markup.callbackButton('Vote Cost', 'cost')
       ]))
 
       // send notification
-      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ') ' + ', MS cost: ' + voteInfo.cost)
+      await ctx.telegram.answerCbQuery(callbackQuery.id, 'Downvoted msg (#' + replyMessageId + ')')
     } else {
       // send error message
-      let errorMsg = JSON.parse(result.data.message)
+      let errorMsg = result.data.message
       if (errorMsg.errorCode === 'InsuffientReputaionsAmount') {
         // insufficient reputation error
         await ctx.telegram.answerCbQuery(callbackQuery.id, 'Insufficient MS, require ' + errorMsg.errorData.diff + ' more')
+      } else if (errorMsg.errorCode === 'ExceedingDownvoteLimit') {
+        // can only vote once
+        await ctx.telegram.answerCbQuery(callbackQuery.id, 'You have already downvoted')
       } else {
         await ctx.telegram.sendMessage(upvoterId, errorMsg)
       }
