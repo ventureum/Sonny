@@ -39,7 +39,7 @@ function voteNumFormat (voteType, counter) {
 }
 
 const helpMsg = 'Milestone bot provides a simple way to interact with milestone community \n\n' +
-      '/rep — view current reputation\n'
+      '/profile — view your profile \n'
 
 bot.start(async (ctx) => {
   try {
@@ -86,7 +86,7 @@ bot.start(async (ctx) => {
 
 bot.help((ctx) => ctx.reply(helpMsg))
 
-bot.command('rep', async (ctx) => {
+bot.command('profile', async (ctx) => {
   try {
     let username = ctx.message.from.username
     let userId = ctx.message.from.id
@@ -96,20 +96,24 @@ bot.command('rep', async (ctx) => {
     if (userId !== chatId) return
 
     const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/get-reputations`,
+      `${process.env.BOT_FEED_END_POINT}/get-profile`,
       {
-        UserAddress: username
+        actor: username
       }
     )
 
     let _reply = null
     if (result.data.ok) {
-      _reply = result.data.reputations
+      let data = result.data.profile
+      _reply = "User Type: " + data.userType + " \n" +
+        "Fuel: " + data.rewardsInfo.fuel + " liters \n" +
+        "Reputation: " + data.rewardsInfo.reputation + " \n" +
+        "Milestone Points: " + data.rewardsInfo.milestonePoints
     } else {
       _reply = result.data.message
     }
 
-    await ctx.reply('Current reputation: ' + _reply)
+    await ctx.reply(_reply)
   } catch (error) {
     console.log(error)
   }
