@@ -20,6 +20,16 @@ const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton('👎', 'downvote')
 ])
 
+const mainMenu = Markup.inlineKeyboard([
+  Markup.callbackButton('Profile', 'profile'),
+  Markup.callbackButton('Language', 'language'),
+  Markup.callbackButton('Tutorial', 'tutorial')
+]).extra()
+
+const backToMainMenu = Markup.inlineKeyboard([
+  Markup.callbackButton('Back', 'backToMainMenu')
+])
+
 const PostType = {
   POST: '0x2fca5a5e',
   COMMENT: '0x6bf78b95',
@@ -40,6 +50,8 @@ function voteNumFormat (voteType, counter) {
 
 const helpMsg = 'Milestone bot provides a simple way to interact with milestone community \n\n' +
       '/profile — view your profile \n'
+
+const TutorialMsg = 'This is a tutorial'
 
 bot.start(async (ctx) => {
   try {
@@ -84,7 +96,15 @@ bot.start(async (ctx) => {
   }
 })
 
-bot.help((ctx) => ctx.reply(helpMsg))
+bot.help((ctx) => {
+  let userId = ctx.message.from.id
+  let chatId = ctx.message.chat.id
+
+  // Can only be called in a private chat
+  if (userId !== chatId) return
+
+  ctx.reply(helpMsg, mainMenu)
+})
 
 bot.command('profile', async (ctx) => {
   try {
@@ -148,6 +168,59 @@ bot.command('refuel', async (ctx) => {
     } else {
       await ctx.reply(result.data)
     }
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+bot.action('profile', async (ctx) => {
+  try {
+    let username = ctx.update.callback_query.from.username
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/get-profile`,
+      {
+        actor: username
+      }
+    )
+
+    let _reply = null
+    if (result.data.ok) {
+      let data = result.data.profile
+      _reply = 'Username: ' + data.actor + ' \n' +
+        'User Type: ' + data.actorType + ' \n' +
+        'Fuel: ' + data.rewardsInfo.fuel + ' liters \n' +
+        'Reputation: ' + data.rewardsInfo.reputation + ' \n' +
+        'Milestone Points: ' + data.rewardsInfo.milestonePoints
+    } else {
+      _reply = result.data.message
+    }
+
+    await ctx.editMessageText(_reply)
+    await ctx.editMessageReplyMarkup(backToMainMenu)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+bot.action('language', async (ctx) => {
+  try {
+    await ctx.editMessageText('Coming soon ...', { parse_mode: 'Markdown', reply_markup: backToMainMenu })
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+bot.action('tutorial', async (ctx) => {
+  try {
+    await ctx.editMessageText(TutorialMsg, { parse_mode: 'Markdown', reply_markup: backToMainMenu })
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+bot.action('backToMainMenu', async (ctx) => {
+  try {
+    await ctx.editMessageText(helpMsg, mainMenu)
   } catch (error) {
     console.log(error)
   }
