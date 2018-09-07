@@ -17,7 +17,7 @@ if (process.env.BOT_LOCAL === 'true') {
 
 const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton('👍', 'upvote'),
-  Markup.callbackButton('👎', 'downvote'),
+  Markup.callbackButton('👎', 'downvote')
 ])
 
 const PostType = {
@@ -180,7 +180,7 @@ bot.action('upvote', async (ctx) => {
 
       ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
         Markup.callbackButton('👍 ' + voteNumFormat('+', postVoteCountInfo.upvoteCount), 'upvote'),
-        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote')
       ]))
 
       // send notification
@@ -230,7 +230,7 @@ bot.action('downvote', async (ctx) => {
 
       ctx.editMessageReplyMarkup(Markup.inlineKeyboard([
         Markup.callbackButton('👍 ' + voteNumFormat('+', postVoteCountInfo.upvoteCount), 'upvote'),
-        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote'),
+        Markup.callbackButton('👎 ' + voteNumFormat('-', postVoteCountInfo.downvoteCount), 'downvote')
       ]))
 
       // send notification
@@ -285,7 +285,7 @@ bot.command('p', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+      await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, { reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -337,7 +337,7 @@ bot.on('message', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, {reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false})
+      await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, { reply_to_message_id: ctx.message.message_id, reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
