@@ -155,7 +155,7 @@ bot.command('refuel', async (ctx) => {
     if (userId !== chatId) return
 
     const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/refuel-reputations`,
+      `${process.env.BOT_FEED_END_POINT}/refuel`,
       {
         actor: username,
         fuel: parseInt(fuel),
