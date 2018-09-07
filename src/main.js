@@ -8,7 +8,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN, {
   webhookReply: process.env.BOT_MODE === 'WEBHOOK'
 })
 
-if (process.env.BOT_LOCAL === 'true') {
+if (process.env.BOT_MODE === 'LOCAL') {
   console.log('=============== LOCAL TESTING MODE ===============')
   bot.telegram.deleteWebhook()
 } else {
