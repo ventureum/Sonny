@@ -66,6 +66,7 @@ bot.start(async (ctx) => {
       }
     )
 
+    let text = ''
     if (!result.data.ok) {
       // error
       // check if we have received actor prifile not exist error
@@ -82,15 +83,15 @@ bot.start(async (ctx) => {
         )
 
         if (regResult.data.ok) {
-          await ctx.reply('I have created an account for you in our system!')
+          text = text + 'I have created an account for you in our system!'
         } else {
           await ctx.reply(regResult.data.message)
         }
       }
     } else {
-      await ctx.reply('You have already registered with us.')
+      text = text + 'You have already registered with us.'
     }
-    return ctx.reply(helpMsg)
+    return ctx.reply(text + '\n\n' + helpMsg, mainMenu)
   } catch (error) {
     console.log(error)
   }
