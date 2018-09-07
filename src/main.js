@@ -105,10 +105,11 @@ bot.command('profile', async (ctx) => {
     let _reply = null
     if (result.data.ok) {
       let data = result.data.profile
-      _reply = "User Type: " + data.userType + " \n" +
-        "Fuel: " + data.rewardsInfo.fuel + " liters \n" +
-        "Reputation: " + data.rewardsInfo.reputation + " \n" +
-        "Milestone Points: " + data.rewardsInfo.milestonePoints
+      _reply = 'Username: ' + data.actor + ' \n' +
+        'User Type: ' + data.actorType + ' \n' +
+        'Fuel: ' + data.rewardsInfo.fuel + ' liters \n' +
+        'Reputation: ' + data.rewardsInfo.reputation + ' \n' +
+        'Milestone Points: ' + data.rewardsInfo.milestonePoints
     } else {
       _reply = result.data.message
     }
