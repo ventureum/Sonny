@@ -125,7 +125,9 @@ bot.command('refuel', async (ctx) => {
     let username = ctx.message.from.username
     let userId = ctx.message.from.id
     let chatId = ctx.message.chat.id
-    let repAmount = ctx.message.text.split(' ')[1]
+    let fuel = ctx.message.text.split(' ')[1]
+    let reputation = ctx.message.text.split(' ')[2]
+    let milestonePoints = ctx.message.text.split(' ')[3]
 
     // Can only be called in a private chat
     if (userId !== chatId) return
@@ -133,8 +135,10 @@ bot.command('refuel', async (ctx) => {
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/refuel-reputations`,
       {
-        UserAddress: username,
-        reputations: parseInt(repAmount)
+        actor: username,
+        fuel: parseInt(fuel),
+        reputation: parseInt(reputation),
+        milestonePoints: parseInt(milestonePoints)
       }
     )
 
