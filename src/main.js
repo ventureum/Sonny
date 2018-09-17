@@ -359,7 +359,7 @@ bot.command('p', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'Post #' + messageId, { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendMessage(ctx.chat.id, 'by @' + user.username, { reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -411,7 +411,7 @@ bot.on('message', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'Reply #' + messageId + ' to message #' + replyTo.message_id, { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendMessage(ctx.chat.id, 'by @' + user.username, { reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
