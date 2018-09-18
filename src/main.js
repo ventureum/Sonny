@@ -21,10 +21,11 @@ const keyboard = Markup.inlineKeyboard([
 ])
 
 const mainMenu = Markup.inlineKeyboard([
+  Markup.urlButton('Portal', 'http://www.milest.one'),
   Markup.callbackButton('Profile', 'profile'),
   Markup.callbackButton('Language', 'language'),
   Markup.callbackButton('Tutorial', 'tutorial')
-]).extra()
+], { columns: 3 }).extra()
 
 const backToMainMenu = Markup.inlineKeyboard([
   Markup.callbackButton('Back', 'backToMainMenu')
