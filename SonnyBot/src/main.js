@@ -330,7 +330,9 @@ bot.action('downvote', async (ctx) => {
 
 bot.command('p', async (ctx) => {
   try {
+
     let user = ctx.message.from
+    console.log(user)
     let messageId = ctx.message.message_id
     let chat = ctx.message.chat
     let messageText = ctx.message.text.slice(3)
