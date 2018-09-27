@@ -288,7 +288,7 @@ bot.action('upvote', async (ctx) => {
     let callbackQuery = ctx.update.callback_query
     let upvoterId = ctx.update.callback_query.from.id
     let message = ctx.update.callback_query.message
-    let replyMessageId = (message.text.split(' ')[1]).substring(1)
+    let replyMessageId = message.message_id - 1
     let replyMessageChat = message.chat
     let replyMessageChatTitle = replyMessageChat.title
 
@@ -340,7 +340,7 @@ bot.action('downvote', async (ctx) => {
     let callbackQuery = ctx.update.callback_query
     let downvoterId = ctx.update.callback_query.from.id
     let message = ctx.update.callback_query.message
-    let replyMessageId = (message.text.split(' ')[1]).substring(1)
+    let replyMessageId = message.message_id - 1
     let replyMessageChat = message.chat
     let replyMessageChatTitle = replyMessageChat.title
 
@@ -390,7 +390,6 @@ bot.action('downvote', async (ctx) => {
 bot.command('p', async (ctx) => {
   try {
     let user = ctx.message.from
-    console.log(user)
     let messageId = ctx.message.message_id
     let chat = ctx.message.chat
     let messageText = ctx.message.text.slice(3)
@@ -423,7 +422,7 @@ bot.command('p', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'post #' + messageId + ' by @' + user.username, { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -478,7 +477,7 @@ bot.on('message', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'reply #' + messageId + ' by @' + user.username, { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
