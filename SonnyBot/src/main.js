@@ -2,6 +2,8 @@ import 'babel-polyfill'
 import axios from 'axios'
 const Telegraf = require('telegraf')
 const Markup = require('telegraf/markup')
+const shake128 = require('js-sha3').shake128
+const uuidParse = require('uuid-parse')
 
 const bot = new Telegraf(process.env.BOT_TOKEN, {
   // set to false for local testing
@@ -55,16 +57,28 @@ const helpMsg = 'Milestone bot provides a simple way to interact with milestone 
 
 const TutorialMsg = 'This is a tutorial'
 
+function getId (telegramId) {
+  const shakeHash = shake128(String(telegramId), 128)
+  const hashBytes = Buffer.from(shakeHash, 'hex')
+  const id = uuidParse.unparse(hashBytes)
+  return id
+}
+
 bot.start(async (ctx) => {
   try {
     await ctx.reply(`Hello, ${ctx.from.first_name} \n\n`)
 
-    let username = ctx.message.from.username
+    let user = ctx.message.from
+    let username = user.username
+
+    // first generate uuid from telegram id
+    let id = getId(user.id)
+
     // first check if user has registered
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/get-profile`,
       {
-        actor: username
+        actor: id
       }
     )
 
@@ -76,11 +90,14 @@ bot.start(async (ctx) => {
       if (msg.errorCode === 'NoActorExisting') {
         // no actor exists
         // automatically register for the user
+
         let regResult = await axios.post(
           `${process.env.BOT_FEED_END_POINT}/profile`,
           {
-            actor: username,
-            userType: 'USER'
+            actor: id,
+            userType: 'USER',
+            username: username,
+            telegamId: String(user.id)
           }
         )
 
@@ -111,9 +128,11 @@ bot.help((ctx) => {
 
 bot.command('profile', async (ctx) => {
   try {
-    let username = ctx.message.from.username
     let userId = ctx.message.from.id
     let chatId = ctx.message.chat.id
+
+    // first generate uuid from telegram id
+    let id = getId(userId)
 
     // Can only be called in a private chat
     if (userId !== chatId) return
@@ -121,7 +140,7 @@ bot.command('profile', async (ctx) => {
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/get-profile`,
       {
-        actor: username
+        actor: id
       }
     )
 
@@ -146,9 +165,11 @@ bot.command('profile', async (ctx) => {
 bot.action('refuel', async (ctx) => {
   try {
     let query = ctx.update.callback_query
-    let username = query.from.username
     let userId = query.from.id
     let chatId = query.message.chat.id
+
+    // first generate uuid from telegram id
+    let id = getId(userId)
 
     // Can only be called in a private chat
     if (userId !== chatId) return
@@ -156,7 +177,7 @@ bot.action('refuel', async (ctx) => {
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/refuel`,
       {
-        actor: username
+        actor: id
       }
     )
 
@@ -173,12 +194,14 @@ bot.action('refuel', async (ctx) => {
 // DEV TEST ONLY
 bot.command('dev-refuel', async (ctx) => {
   try {
-    let username = ctx.message.from.username
     let userId = ctx.message.from.id
     let chatId = ctx.message.chat.id
     let fuel = ctx.message.text.split(' ')[1]
     let reputation = ctx.message.text.split(' ')[2]
     let milestonePoints = ctx.message.text.split(' ')[3]
+
+    // first generate uuid from telegram id
+    let id = getId(userId)
 
     // Can only be called in a private chat
     if (userId !== chatId) return
@@ -186,7 +209,7 @@ bot.command('dev-refuel', async (ctx) => {
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/dev-refuel`,
       {
-        actor: username,
+        actor: id,
         fuel: parseInt(fuel),
         reputation: parseInt(reputation),
         milestonePoints: parseInt(milestonePoints)
@@ -205,11 +228,15 @@ bot.command('dev-refuel', async (ctx) => {
 
 bot.action('profile', async (ctx) => {
   try {
-    let username = ctx.update.callback_query.from.username
+    let userId = ctx.update.callback_query.from.id
+
+    // first generate uuid from telegram id
+    let id = getId(userId)
+
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/get-profile`,
       {
-        actor: username
+        actor: id
       }
     )
 
@@ -259,18 +286,20 @@ bot.action('backToMainMenu', async (ctx) => {
 bot.action('upvote', async (ctx) => {
   try {
     let callbackQuery = ctx.update.callback_query
-    let upvoter = ctx.update.callback_query.from.username
     let upvoterId = ctx.update.callback_query.from.id
     let message = ctx.update.callback_query.message
     let replyMessageId = (message.text.split(' ')[1]).substring(1)
     let replyMessageChat = message.chat
     let replyMessageChatTitle = replyMessageChat.title
 
+    // first generate uuid from telegram id
+    let id = getId(upvoterId)
+
     // invoke vote api
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
       {
-        actor: upvoter,
+        actor: id,
         boardId: replyMessageChatTitle,
         postHash: replyMessageId.toString(),
         value: 1
@@ -309,18 +338,20 @@ bot.action('upvote', async (ctx) => {
 bot.action('downvote', async (ctx) => {
   try {
     let callbackQuery = ctx.update.callback_query
-    let upvoter = ctx.update.callback_query.from.username
-    let upvoterId = ctx.update.callback_query.from.id
+    let downvoterId = ctx.update.callback_query.from.id
     let message = ctx.update.callback_query.message
     let replyMessageId = (message.text.split(' ')[1]).substring(1)
     let replyMessageChat = message.chat
     let replyMessageChatTitle = replyMessageChat.title
 
+    // first generate uuid from telegram id
+    let id = getId(downvoterId)
+
     // invoke vote api
     const result = await axios.post(
       `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
       {
-        actor: upvoter,
+        actor: id,
         boardId: replyMessageChatTitle,
         postHash: replyMessageId.toString(),
         value: -1
@@ -348,7 +379,7 @@ bot.action('downvote', async (ctx) => {
         // can only vote once
         await ctx.telegram.answerCbQuery(callbackQuery.id, 'You have already downvoted')
       } else {
-        await ctx.telegram.sendMessage(upvoterId, errorMsg)
+        await ctx.telegram.sendMessage(downvoterId, errorMsg)
       }
     }
   } catch (error) {
@@ -358,18 +389,20 @@ bot.action('downvote', async (ctx) => {
 
 bot.command('p', async (ctx) => {
   try {
-
     let user = ctx.message.from
     console.log(user)
     let messageId = ctx.message.message_id
     let chat = ctx.message.chat
     let messageText = ctx.message.text.slice(3)
 
+    // first generate uuid from telegram id
+    let id = getId(user.id)
+
     // must be in a valid group
     if (!isValidGroup(chat.title)) return
 
     let data = {
-      actor: user.username,
+      actor: id,
       boardId: chat.title,
       postHash: messageId.toString(),
       parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
@@ -390,7 +423,7 @@ bot.command('p', async (ctx) => {
 
     if (result.data.ok) {
       // send a notification to user
-      await ctx.telegram.sendMessage(ctx.chat.id, 'post #'+ messageId +' by @' + user.username, { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendMessage(ctx.chat.id, 'post #' + messageId + ' by @' + user.username, { reply_markup: keyboard, disable_notification: false })
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -408,6 +441,9 @@ bot.on('message', async (ctx) => {
     let chat = ctx.message.chat
     let messageText = ctx.message.text
 
+    // first generate uuid from telegram id
+    let id = getId(user.id)
+
     // must be a reply
     if (!ctx.message.reply_to_message) return
 
@@ -421,7 +457,7 @@ bot.on('message', async (ctx) => {
     if (!isValidGroup(chat.title)) return
 
     let data = {
-      actor: user.username,
+      actor: id,
       boardId: chat.title,
       postHash: messageId.toString(),
       parentHash: replyTo.message_id.toString(),

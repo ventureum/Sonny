@@ -6,7 +6,9 @@
   "dependencies": {
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
-    "telegraf": "^3.23.0"
+    "js-sha3": "^0.8.0",
+    "telegraf": "^3.23.0",
+    "uuid-parse": "^1.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
