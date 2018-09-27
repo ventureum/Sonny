@@ -23,6 +23,7 @@ const keyboard = Markup.inlineKeyboard([
 const mainMenu = Markup.inlineKeyboard([
   Markup.urlButton('Portal', 'http://www.milest.one'),
   Markup.callbackButton('Profile', 'profile'),
+  Markup.callbackButton('Refuel', 'refuel'),
   Markup.callbackButton('Language', 'language'),
   Markup.callbackButton('Tutorial', 'tutorial')
 ], { columns: 3 }).extra()
@@ -142,8 +143,35 @@ bot.command('profile', async (ctx) => {
   }
 })
 
+bot.action('refuel', async (ctx) => {
+  try {
+    let query = ctx.update.callback_query
+    let username = query.from.username
+    let userId = query.from.id
+    let chatId = query.message.chat.id
+
+    // Can only be called in a private chat
+    if (userId !== chatId) return
+
+    const result = await axios.post(
+      `${process.env.BOT_FEED_END_POINT}/refuel`,
+      {
+        actor: username
+      }
+    )
+
+    if (result.data.ok) {
+      await ctx.reply('Refueled ' + result.data.refuelAmount)
+    } else {
+      await ctx.reply(result.data.message)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+})
+
 // DEV TEST ONLY
-bot.command('refuel', async (ctx) => {
+bot.command('dev-refuel', async (ctx) => {
   try {
     let username = ctx.message.from.username
     let userId = ctx.message.from.id
@@ -156,7 +184,7 @@ bot.command('refuel', async (ctx) => {
     if (userId !== chatId) return
 
     const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/refuel`,
+      `${process.env.BOT_FEED_END_POINT}/dev-refuel`,
       {
         actor: username,
         fuel: parseInt(fuel),
