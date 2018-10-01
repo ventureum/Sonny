@@ -390,6 +390,7 @@ bot.action('downvote', async (ctx) => {
 bot.command('p', async (ctx) => {
   try {
     let user = ctx.message.from
+    let message = ctx.message
     let messageId = ctx.message.message_id
     let chat = ctx.message.chat
     let messageText = ctx.message.text.slice(3)
@@ -409,7 +410,8 @@ bot.command('p', async (ctx) => {
       content: {
         title: '@' + user.username + ' From telegram',
         subtitle: messageText.slice(0, 50) + '...',
-        text: messageText
+        text: messageText,
+        meta: JSON.stringify(message.entities)
       },
       getStreamApiKey: process.env.STREAM_API_KEY,
       getStreamApiSecret: process.env.STREAM_API_SECRET
