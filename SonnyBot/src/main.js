@@ -301,7 +301,7 @@ bot.action('upvote', async (ctx) => {
       {
         actor: id,
         boardId: replyMessageChatTitle,
-        postHash: replyMessageId.toString(),
+        postHash: replyMessageChat.id + ' ' + replyMessageId.toString(),
         value: 1
       }
     )
@@ -353,7 +353,7 @@ bot.action('downvote', async (ctx) => {
       {
         actor: id,
         boardId: replyMessageChatTitle,
-        postHash: replyMessageId.toString(),
+        postHash: replyMessageChat.id + ' ' + replyMessageId.toString(),
         value: -1
       }
     )
@@ -404,7 +404,7 @@ bot.command('p', async (ctx) => {
     let data = {
       actor: id,
       boardId: chat.title,
-      postHash: messageId.toString(),
+      postHash: chat.id + ' ' + messageId.toString(),
       parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
       typeHash: PostType.POST,
       content: {
@@ -460,8 +460,8 @@ bot.on('message', async (ctx) => {
     let data = {
       actor: id,
       boardId: chat.title,
-      postHash: messageId.toString(),
-      parentHash: replyTo.message_id.toString(),
+      postHash: chat.id + ' ' + messageId.toString(),
+      parentHash: chat.id + ' ' + replyTo.message_id.toString(),
       typeHash: PostType.COMMENT,
       content: {
         title: '@' + user.username + ' From telegram',
