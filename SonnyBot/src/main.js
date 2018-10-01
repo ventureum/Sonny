@@ -192,7 +192,7 @@ bot.action('refuel', async (ctx) => {
 })
 
 // DEV TEST ONLY
-bot.command('dev-refuel', async (ctx) => {
+bot.command('devRefuel', async (ctx) => {
   try {
     let userId = ctx.message.from.id
     let chatId = ctx.message.chat.id
