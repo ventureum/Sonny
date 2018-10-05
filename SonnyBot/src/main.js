@@ -404,7 +404,7 @@ bot.command('p', async (ctx) => {
     let data = {
       actor: id,
       boardId: chat.title,
-      postHash: chat.id + ' ' + messageId.toString(),
+      postHash: chat.id + '_' + messageId.toString(),
       parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
       typeHash: PostType.POST,
       content: {
@@ -425,6 +425,7 @@ bot.command('p', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg')
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -460,8 +461,8 @@ bot.on('message', async (ctx) => {
     let data = {
       actor: id,
       boardId: chat.title,
-      postHash: chat.id + ' ' + messageId.toString(),
-      parentHash: chat.id + ' ' + replyTo.message_id.toString(),
+      postHash: chat.id + '_' + messageId.toString(),
+      parentHash: chat.id + '_' + replyTo.message_id.toString(),
       typeHash: PostType.COMMENT,
       content: {
         title: '@' + user.username + ' From telegram',
@@ -480,6 +481,7 @@ bot.on('message', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg')
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
