@@ -301,7 +301,7 @@ bot.action('upvote', async (ctx) => {
       {
         actor: id,
         boardId: replyMessageChatTitle,
-        postHash: replyMessageChat.id + ' ' + replyMessageId.toString(),
+        postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: 1
       }
     )
@@ -353,7 +353,7 @@ bot.action('downvote', async (ctx) => {
       {
         actor: id,
         boardId: replyMessageChatTitle,
-        postHash: replyMessageChat.id + ' ' + replyMessageId.toString(),
+        postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: -1
       }
     )
