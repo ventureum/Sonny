@@ -1,9 +1,9 @@
 import 'babel-polyfill'
 import axios from 'axios'
-import Web3 from 'web3'
 const Telegraf = require('telegraf')
 const Markup = require('telegraf/markup')
 const shake128 = require('js-sha3').shake128
+const sha3_256 = require('js-sha3').sha3_256
 const uuidParse = require('uuid-parse')
 
 const bot = new Telegraf(process.env.BOT_TOKEN, {
@@ -301,7 +301,7 @@ bot.action('upvote', async (ctx) => {
       `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
       {
         actor: id,
-        boardId: Web3.utils.sha3(replyMessageChat.id.toString()),
+        boardId: '0x'+sha3_256(replyMessageChat.id.toString()),
         postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: 1
       }
@@ -352,7 +352,7 @@ bot.action('downvote', async (ctx) => {
       `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
       {
         actor: id,
-        boardId: Web3.utils.sha3(replyMessageChat.id.toString()),
+        boardId: '0x'+sha3_256(replyMessageChat.id.toString()),
         postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: -1
       }
@@ -403,7 +403,7 @@ bot.command('p', async (ctx) => {
 
     let data = {
       actor: id,
-      boardId: Web3.utils.sha3(chat.id.toString()),
+      boardId: '0x'+sha3_256(chat.id.toString()),
       postHash: chat.id + '_' + messageId.toString(),
       parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
       typeHash: PostType.POST,
@@ -460,7 +460,7 @@ bot.on('message', async (ctx) => {
 
     let data = {
       actor: id,
-      boardId: Web3.utils.sha3(chat.id.toString()),
+      boardId: '0x'+sha3_256(chat.id.toString()),
       postHash: chat.id + '_' + messageId.toString(),
       parentHash: chat.id + '_' + replyTo.message_id.toString(),
       typeHash: PostType.COMMENT,
