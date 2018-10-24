@@ -492,6 +492,16 @@ bot.on('message', async (ctx) => {
 })
 
 exports.handler = async (event, context, callback) => {
+  /*
+   * Test Web3 1.0.0 in lambda
+   * Remove them if not needed.
+   */
+  const Web3 = require('web3')
+  const web3 = new Web3()
+  console.log("web3 keys: ")
+  console.log(Object.keys(web3))
+  console.log("web3 version: " + web3['version'])
+
   const body = event.body // get data passed to us
   try {
     bot.handleUpdate(body) // make Telegraf process that data
