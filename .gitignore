@@ -71,3 +71,7 @@ typings/
 
 # Serverless directories
 .serverless
+
+# SonnyBot build output
+SonnyBot/dist
+SonnyBot/app.zip
