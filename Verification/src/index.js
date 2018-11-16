@@ -33,7 +33,7 @@ function generatePolicy (principal, effect, methodArn) {
 exports.handler = async (event, context, callback) => {
   const { authorizationToken, methodArn } = event
   try {
-    const verifiedJWT = await jwt.verify(authorizationToken, JWTRS256_PUBLIC)
+    const verifiedJWT = await jwt.verify(authorizationToken, JWTRS256_PUBLIC, { algorithms: ['RS256'] })
     console.log('verifiedJWT:', verifiedJWT)
     context.succeed(generatePolicy(verifiedJWT.data.actor, 'Allow', methodArn))
   } catch (e) {
