@@ -35,8 +35,8 @@ exports.handler = async (event, context, callback) => {
   try {
     const verifiedJWT = await jwt.verify(authorizationToken, JWTRS256_PUBLIC)
     console.log('verifiedJWT:', verifiedJWT)
-    context.succeed(generatePolicy('user', 'Allow', methodArn))
+    context.succeed(generatePolicy(verifiedJWT.data.actor, 'Allow', methodArn))
   } catch (e) {
-    context.succeed(generatePolicy('user', 'Deny', methodArn))
+    context.succeed(generatePolicy('badUser', 'Deny', methodArn))
   }
 }

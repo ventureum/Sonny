@@ -1,9 +1,10 @@
+import { shake128 } from 'js-sha3'
 const Telegraf = require('telegraf')
 const { promisify } = require('util')
 const Markup = require('telegraf/markup')
 var jwt = require('jsonwebtoken')
-
 var Memcached = require('memcached')
+
 var memcached = new Memcached(process.env.MEMCACHED_SERVER)
 
 const memcachedGet = promisify(memcached.get).bind(memcached)
@@ -49,10 +50,16 @@ bot.start(async (ctx) => {
     await ctx.reply('Logging in ... \n')
 
     console.log('Received user info, generating JWT', ctx)
+
+    const shakeHash = shake128(String(user.id), 128)
+    const hashBytes = Buffer.from(shakeHash, 'hex')
+    const uuidParse = require('uuid-parse')
+    const actor = uuidParse.unparse(hashBytes)
     var token = await jwt.sign({
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24), // expires in 24 hr
       data: {
-        id: user.id,
+        actor: actor,
+        telegramId: user.id,
         username: user.username
       }
     },

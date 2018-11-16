@@ -5,5 +5,5 @@ npm run build
 zip -r app.zip ./
 aws lambda update-function-code \
     --region "us-west-1" \
-    --function-name "AuthenticationBot" \
+    --function-name "authentication_bot" \
     --zip-file "fileb://./app.zip"
