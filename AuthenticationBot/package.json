@@ -22,7 +22,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist/ && babel ./src --out-dir dist/ --ignore ./package.json,./npm-debug.log --copy-files",
-    "start": "npm run build && node dist/main.js"
+    "start": "npm run build && node dist/main.js",
+    "super": "npm run build && node dist/super.js"
   },
   "author": "",
   "license": "ISC",

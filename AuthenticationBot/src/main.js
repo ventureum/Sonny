@@ -77,13 +77,13 @@ bot.start(async (ctx) => {
       value: token
     })
 
-    // For Niagara integration in the future.
-    // const button = Markup.inlineKeyboard([
-    //   Markup.urlButton('Back to Milstone App', `https://open.milestone/LoginPage?jwt=${token}`)
-    // ]).extra()
+    const button = Markup.inlineKeyboard([
+      Markup.urlButton('Back to Milstone App', `http://open.milestone/login/loading/${token}`)
+    ]).extra()
 
     return ctx.reply(
-      'You are successfully logged in, you can now return to Milestone App\n\n'
+      'You are successfully logged in, you can now return to Milestone App\n\n',
+      button
     )
   } catch (error) {
     console.log(error)

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 
 const JWTRS256_PUBLIC = `-----BEGIN PUBLIC KEY-----\n${process.env.JWTRS256_PUBLIC}\n-----END PUBLIC KEY-----`
+const SUPER_KEY_PUBLIC = `-----BEGIN PUBLIC KEY-----\n${process.env.SUPER_KEY_PUBLIC}\n-----END PUBLIC KEY-----`
 
 function generatePolicy (principal, effect, methodArn) {
   let tmp = methodArn.split(':')
@@ -37,6 +38,12 @@ exports.handler = async (event, context, callback) => {
     console.log('verifiedJWT:', verifiedJWT)
     context.succeed(generatePolicy(verifiedJWT.data.actor, 'Allow', methodArn))
   } catch (e) {
-    context.succeed(generatePolicy('badUser', 'Deny', methodArn))
+    try {
+      const superJWT = await jwt.verify(authorizationToken, SUPER_KEY_PUBLIC, { algorithms: ['RS256'] })
+      console.log('superJWT:', superJWT)
+      context.succeed(generatePolicy('superUser', 'Allow', methodArn))
+    } catch (e) {
+      context.succeed(generatePolicy('badUser', 'Deny', methodArn))
+    }
   }
 }
