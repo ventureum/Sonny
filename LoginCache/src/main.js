@@ -28,7 +28,8 @@ exports.handler = async (event, context, callback) => {
     memcached.end() // close connections
     return callback(null, {
       statusCode: 200,
-      body: rv
+      ok: true,
+      accessToken: rv
     })
   } catch (error) {
     memcached.end() // close connections
