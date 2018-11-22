@@ -1,7 +1,7 @@
 {
-  "name": "@venturuem/verification",
+  "name": "@venturuem/verify-super-user",
   "version": "1.0.0",
-  "description": "aws user authorizer",
+  "description": "verify super user for root access",
   "main": "main.js",
   "dependencies": {
     "jsonwebtoken": "^8.3.0"
