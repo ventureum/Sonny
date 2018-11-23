@@ -1,7 +1,7 @@
 {
-  "name": "@venturuem/login-memcached",
+  "name": "@venturuem/authentication-bot",
   "version": "1.0.0",
-  "description": "Ventureum Login Bot",
+  "description": "Ventureum Authentication Bot",
   "main": "main.js",
   "dependencies": {
     "js-sha3": "^0.8.0",

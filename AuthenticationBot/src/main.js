@@ -44,7 +44,10 @@ async function cacheHandler (command, data) {
 bot.start(async (ctx) => {
   try {
     let user = ctx.from
-    let requestKey = ctx.message.text.split(' ')[1]
+    let info = (ctx.message.text.split(' ')[1]).split('_')
+
+    const requestKey = info[0]
+    const comingSource = info[1]
 
     await ctx.reply(`Hello, ${user.first_name} \n\n`)
     await ctx.reply('Logging in ... \n')
@@ -77,9 +80,12 @@ bot.start(async (ctx) => {
       value: token
     })
 
-    const button = Markup.inlineKeyboard([
-      Markup.urlButton('Back to Milstone App', `http://open.milestone/login/loading/${token}`)
-    ]).extra()
+    let button
+    if (comingSource === 'IOS' || comingSource === 'ANDROID') {
+      button = Markup.inlineKeyboard([
+        Markup.urlButton('Back to Milstone App', `http://open.milestone/login/loading/${token}`)
+      ]).extra()
+    }
 
     return ctx.reply(
       'You are successfully logged in, you can now return to Milestone App\n\n',
