@@ -44,10 +44,9 @@ async function cacheHandler (command, data) {
 bot.start(async (ctx) => {
   try {
     let user = ctx.from
-    let info = (ctx.message.text.split(' ')[1]).split('_')
+    let payload = (ctx.message.text.split(' ')[1])
 
-    const requestKey = info[0]
-    const comingSource = info[1]
+    const comingSource = payload.slice(24)
 
     await ctx.reply(`Hello, ${user.first_name} \n\n`)
     await ctx.reply('Logging in ... \n')
@@ -72,11 +71,11 @@ bot.start(async (ctx) => {
     console.log('JWT generated:', token)
 
     await cacheHandler('SET', {
-      key: requestKey,
+      key: payload,
       value: token
     })
     console.log('chache written:', {
-      key: requestKey,
+      key: payload,
       value: token
     })
 
