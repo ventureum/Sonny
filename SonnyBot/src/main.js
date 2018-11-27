@@ -6,6 +6,14 @@ const shake128 = require('js-sha3').shake128
 const sha3_256 = require('js-sha3').sha3_256
 const uuidParse = require('uuid-parse')
 
+const apiEndPoint = axios.create({
+  baseURL: process.env.BOT_FEED_END_POINT,
+  headers: {
+    'Authorization': process.env.ACCESS_TOKEN,
+    'Content-Type': 'application/json'
+  }
+})
+
 const bot = new Telegraf(process.env.BOT_TOKEN, {
   // set to false for local testing
   webhookReply: process.env.BOT_MODE === 'WEBHOOK'
@@ -76,8 +84,8 @@ bot.start(async (ctx) => {
     let id = getId(user.id)
 
     // first check if user has registered
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/get-profile`,
+    const result = await apiEndPoint.post(
+      `/get-profile`,
       {
         actor: id
       }
@@ -92,8 +100,8 @@ bot.start(async (ctx) => {
         // no actor exists
         // automatically register for the user
 
-        let regResult = await axios.post(
-          `${process.env.BOT_FEED_END_POINT}/profile`,
+        let regResult = await apiEndPoint.post(
+          `/profile`,
           {
             actor: id,
             userType: 'USER',
@@ -138,8 +146,8 @@ bot.command('profile', async (ctx) => {
     // Can only be called in a private chat
     if (userId !== chatId) return
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/get-profile`,
+    const result = await apiEndPoint.post(
+      `/get-profile`,
       {
         actor: id
       }
@@ -175,8 +183,8 @@ bot.action('refuel', async (ctx) => {
     // Can only be called in a private chat
     if (userId !== chatId) return
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/refuel`,
+    const result = await apiEndPoint.post(
+      `/refuel`,
       {
         actor: id
       }
@@ -207,8 +215,8 @@ bot.command('devRefuel', async (ctx) => {
     // Can only be called in a private chat
     if (userId !== chatId) return
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/dev-refuel`,
+    const result = await apiEndPoint.post(
+      `/dev-refuel`,
       {
         actor: id,
         fuel: parseInt(fuel),
@@ -234,8 +242,8 @@ bot.action('profile', async (ctx) => {
     // first generate uuid from telegram id
     let id = getId(userId)
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/get-profile`,
+    const result = await apiEndPoint.post(
+      `/get-profile`,
       {
         actor: id
       }
@@ -297,11 +305,11 @@ bot.action('upvote', async (ctx) => {
     let id = getId(upvoterId)
 
     // invoke vote api
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+    const result = await apiEndPoint.post(
+      `/feed-upvote`,
       {
         actor: id,
-        boardId: '0x'+sha3_256(replyMessageChat.id.toString()),
+        boardId: '0x' + sha3_256(replyMessageChat.id.toString()),
         postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: 1
       }
@@ -348,11 +356,11 @@ bot.action('downvote', async (ctx) => {
     let id = getId(downvoterId)
 
     // invoke vote api
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/feed-upvote`,
+    const result = await apiEndPoint.post(
+      `/feed-upvote`,
       {
         actor: id,
-        boardId: '0x'+sha3_256(replyMessageChat.id.toString()),
+        boardId: '0x' + sha3_256(replyMessageChat.id.toString()),
         postHash: replyMessageChat.id + '_' + replyMessageId.toString(),
         value: -1
       }
@@ -403,7 +411,7 @@ bot.command('p', async (ctx) => {
 
     let data = {
       actor: id,
-      boardId: '0x'+sha3_256(chat.id.toString()),
+      boardId: '0x' + sha3_256(chat.id.toString()),
       postHash: chat.id + '_' + messageId.toString(),
       parentHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // no parent
       typeHash: PostType.POST,
@@ -417,8 +425,8 @@ bot.command('p', async (ctx) => {
       getStreamApiSecret: process.env.STREAM_API_SECRET
     }
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/feed-post`,
+    const result = await apiEndPoint.post(
+      `/feed-post`,
       data
     )
 
@@ -460,7 +468,7 @@ bot.on('message', async (ctx) => {
 
     let data = {
       actor: id,
-      boardId: '0x'+sha3_256(chat.id.toString()),
+      boardId: '0x' + sha3_256(chat.id.toString()),
       postHash: chat.id + '_' + messageId.toString(),
       parentHash: chat.id + '_' + replyTo.message_id.toString(),
       typeHash: PostType.COMMENT,
@@ -473,8 +481,8 @@ bot.on('message', async (ctx) => {
       getStreamApiSecret: process.env.STREAM_API_SECRET
     }
 
-    const result = await axios.post(
-      `${process.env.BOT_FEED_END_POINT}/feed-post`,
+    const result = await apiEndPoint.post(
+      `/feed-post`,
       data
     )
 
@@ -498,9 +506,9 @@ exports.handler = async (event, context, callback) => {
    */
   const Web3 = require('web3')
   const web3 = new Web3()
-  console.log("web3 keys: ")
+  console.log('web3 keys: ')
   console.log(Object.keys(web3))
-  console.log("web3 version: " + web3['version'])
+  console.log('web3 version: ' + web3['version'])
 
   const body = event.body // get data passed to us
   try {
