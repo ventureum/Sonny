@@ -433,7 +433,7 @@ bot.command('p', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
-      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg')
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADEAADLCEmHRVYlcnnFOIYAg')
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
@@ -489,7 +489,7 @@ bot.on('message', async (ctx) => {
     if (result.data.ok) {
       // send a notification to user
       await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg', { reply_markup: keyboard, disable_notification: false })
-      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADBQADLCEmHesoPkiTdaEtAg')
+      await ctx.telegram.sendSticker(ctx.chat.id, 'CAADAQADEAADLCEmHRVYlcnnFOIYAg')
     } else {
       // send error message
       await ctx.telegram.sendMessage(user.id, result.data.message)
