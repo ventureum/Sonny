@@ -1,0 +1,25 @@
+{
+  "name": "verificationnoauth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist/ && babel ./src --out-dir dist/ --ignore ./package.json,./npm-debug.log --copy-files",
+    "start": "npm run build && node dist/index.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^10.0.1",
+    "rimraf": "^2.6.2"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.3.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
